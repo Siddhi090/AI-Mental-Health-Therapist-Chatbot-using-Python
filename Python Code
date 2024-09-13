@@ -1,0 +1,42 @@
+pip install nltk transformers torch flask
+
+from transformers import pipeline
+
+sentiment_analysis = pipeline("sentiment-analysis")
+result = sentiment_analysis("I'm feeling really down today.")
+print(result)
+
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+model = GPT2LMHeadModel.from_pretrained("gpt2")
+
+input_text = "I'm feeling anxious."
+inputs = tokenizer.encode(input_text, return_tensors="pt")
+outputs = model.generate(inputs, max_length=50, do_sample=True)
+response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+print(response)
+
+def generate_response(user_input):
+    sentiment = sentiment_analysis(user_input)[0]['label']
+    if sentiment == 'NEGATIVE':
+        return "I'm sorry you're feeling this way. I'm here to listen."
+    else:
+        return "That's great to hear! How else can I assist you today?"
+
+print(generate_response("I feel so overwhelmed."))
+
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_input = request.json['message']
+    response = generate_response(user_input)
+    return jsonify({"response": response})
+
+if __name__ == '__main__':
+    app.run()
+
+
